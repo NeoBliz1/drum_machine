@@ -1,29 +1,33 @@
 {
-  "name": "drum-machine",
-  "version": "1.0.0",
-  "description": "#freeCodeCamp project",
-  "keywords": [],
-  "main": "src/index.js",
-  "dependencies": {
-    "react": "17.0.2",
-    "react-bootstrap": "2.5.0-beta.1",
-    "react-dom": "17.0.2",
-    "react-scripts": "5.0.0"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ],
-  "devDependencies": {
-    "eslint": "^8.28.0",
-    "eslint-plugin-react": "^7.31.11"
-  }
+	"name": "drum-machine",
+	"version": "1.0.0",
+	"homepage": "https://neobliz1.github.io/drum_machine/",
+	"description": "#freeCodeCamp project",
+	"keywords": [],
+	"main": "src/index.js",
+	"dependencies": {
+		"gh-pages": "^4.0.0",
+		"react": "17.0.2",
+		"react-bootstrap": "2.5.0-beta.1",
+		"react-dom": "17.0.2",
+		"react-scripts": "5.0.0"
+	},
+	"scripts": {
+		"start": "react-scripts start",
+		"build": "react-scripts build",
+		"test": "react-scripts test --env=jsdom",
+		"eject": "react-scripts eject",
+		"predeploy": "npm run build",
+		"deploy": "gh-pages -d build"
+	},
+	"browserslist": [
+		">0.2%",
+		"not dead",
+		"not ie <= 11",
+		"not op_mini all"
+	],
+	"devDependencies": {
+		"eslint": "^8.28.0",
+		"eslint-plugin-react": "^7.31.11"
+	}
 }
