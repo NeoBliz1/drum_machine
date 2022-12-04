@@ -1,0 +1,8 @@
+{
+	"short_name": "Neobliz1 Drum machine project",
+	"name": "Neobliz1's freeCodeCamp project 'Drum machine'",
+	"start_url": ".",
+	"display": "standalone",
+	"theme_color": "#000000",
+	"background_color": "#ffffff"
+}
