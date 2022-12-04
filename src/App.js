@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Container, Col, Card } from 'react-bootstrap';
+import React, {
+	useState,
+	useEffect,
+	useMemo,
+	useRef,
+	useLayoutEffect,
+} from 'react';
+import { Container, Col, Card } from 'react-bootstrap';
 
 import './styles.css';
 
@@ -14,78 +20,75 @@ const DrumButton = (props) => {
 		powerState,
 		setCurrentKeyId,
 		volumeValue,
-		keyPressedCount,
 		setKeyPressedCount,
 	} = props;
+	const currPadCodeMemo = useMemo(() => keyCode, []);
+	const soundRef = useRef();
+	const [padStateClass, setPadClass] = useState('padStyleInactive');
 
-	const btnBasicStyle = {
-		backgroundColor: powerState ? '#007bff' : '#ccc',
-		border: 'none',
-		boxShadow: '6px 3px 2px gray',
-		height: '50px',
-		width: '50px',
-	};
-	const btnDisableStyle = {
-		backgroundColor: '#ccc',
-	};
-	const btnEnableStyle = {
-		backgroundColor: '#007bff',
-	};
-	const btnActiveStyle = {
-		backgroundColor: 'yellow',
-		boxShadow: 'none',
-	};
-
-	const [buttonStateStyle, setButtonStyle] = useState(btnBasicStyle);
-
-	const [keySound] = useState(new Audio(urlAudio));
-	keySound.volume = volumeValue;
-	//console.log(keySound.volume);
-	const padPressed = () => {
-		if (powerState) {
-			setKeyPressedCount(keyPressedCount + 1);
-			//console.log(keyPressedCount);
-			setCurrentKeyId(id);
-			keySound.pause();
-			keySound.currentTime = 0;
-			keySound.play();
-			setButtonStyle(btnActiveStyle);
-			setTimeout(() => setButtonStyle(btnEnableStyle), 150);
+	const padToggleStyle = (pervState) => {
+		if (pervState === 'padStyleActive') {
+			setPadClass('padStylePressed');
+		} else {
+			setPadClass('padStyleActive');
 		}
 	};
-	//console.log(keyTrigger + " button rendered");
+
+	const padPressed = () => {
+		if (powerState) {
+			setKeyPressedCount((prevstate) => prevstate + 1);
+			setCurrentKeyId(id);
+			soundRef.current.currentTime = 0;
+			soundRef.current.play();
+			//for access to previous state use prevState as mentioned below
+			setPadClass((pervState) => padToggleStyle(pervState));
+			setTimeout(
+				() => setPadClass((pervState) => padToggleStyle(pervState)),
+				100,
+			);
+		}
+	};
+
+	//console.log(keyTrigger + ' button rendered');
 	const handelKeyPress = (e) => {
-		let keyPressCode = e.keyCode;
-		if (keyPressCode === keyCode) {
+		let keyFromCurrEvent = e.keyCode;
+		// console.log(keyFromCurrEvent);
+		// console.log(keyCode);
+		if (keyFromCurrEvent === currPadCodeMemo) {
 			padPressed();
-			//console.log(keyPressCode + " = " + keyCode);
+			// console.log(currPadCodeMemo);
 		}
 	};
 
 	useEffect(() => {
 		//console.log("useEffect DumButton component executed");
 		if (powerState) {
-			setButtonStyle(btnEnableStyle);
+			setPadClass('padStyleActive');
 			//console.log("enable style active");
 			document.addEventListener('keydown', handelKeyPress);
-			//console.log("listner added");
+			// console.log('listner added');
 		} else {
-			setButtonStyle(btnDisableStyle);
+			setPadClass('padStyleInactive');
 			//console.log("disables style active");
 		}
 		return () => {
 			document.removeEventListener('keydown', handelKeyPress);
-			//console.log("listner removed");
+			// console.log('listner removed');
 		};
 	}, [powerState]);
+
+	useLayoutEffect(() => {
+		soundRef.current.volume = volumeValue;
+	}, [volumeValue]);
+
 	return (
-		<Button
-			className="m-1 btn-lg flex-fill"
+		<button
+			className={'drum-pad m-1 btn-lg flex-fill padStyle ' + padStateClass}
 			id={id}
-			style={{ ...btnBasicStyle, ...buttonStateStyle }}
 			onClick={padPressed}>
+			<audio ref={soundRef} className="clip" id={keyTrigger} src={urlAudio} />
 			{keyTrigger}
-		</Button>
+		</button>
 	);
 };
 //********************************drum_pad_control_panel_component
@@ -132,6 +135,7 @@ const ControlPanel = (props) => {
 		}
 	};
 	useEffect(() => {
+		//console.log(keyPressedCount);
 		labelDisplayHandler(currentKeyId);
 		return () => {
 			clearTimeout(timer);
@@ -166,7 +170,9 @@ const ControlPanel = (props) => {
 					backgroundColor: 'gray',
 					color: 'aquamarine',
 				}}>
-				<p className="mb-0 font-weight-bold">{displayLabel}</p>
+				<p id="display" className="mb-0 font-weight-bold">
+					{displayLabel}
+				</p>
 			</div>
 			<label htmlFor="volume" className="mb-0 mt-2">
 				Volume
@@ -266,6 +272,12 @@ const App = () => {
 		},
 	];
 
+	const bankOneWithKey = bankOne.map((el, i) => {
+		el.uniqueKey = i + 1;
+		// console.log(el);
+		return el;
+	});
+
 	const bankTwo = [
 		{
 			keyCode: 81,
@@ -322,6 +334,13 @@ const App = () => {
 			url: 'https://s3.amazonaws.com/freecodecamp/drums/Brk_Snr.mp3',
 		},
 	];
+
+	const bankTwoWithKey = bankTwo.map((el, i) => {
+		el.uniqueKey = i + 10;
+		// console.log(el);
+		return el;
+	});
+
 	//console.log("component App rendered");
 	const [bgColor] = useState('aliceblue');
 	const [currentSoundBank, setCurrentSoundBank] = useState(1);
@@ -330,6 +349,18 @@ const App = () => {
 	const [volumeValue, setVolumeValue] = useState(0.5);
 	const [currentKeyId, setCurrentKeyId] = useState(' ');
 	const [keyPressedCount, setKeyPressedCount] = useState(0);
+
+	// console.log(drumBoardRollout);
+	useEffect(() => {
+		//console.log('useEffect DumButton component executed')
+		if (currentSoundBank === 1) {
+			setDrumBoardProps(bankOneWithKey);
+		} else {
+			// console.log(bankTwo);
+			setDrumBoardProps(bankTwoWithKey);
+		}
+	}, [currentSoundBank]);
+
 	//create arr based on the properies banks
 	let drumBoardRollout = drumBoardProps.map((el) => {
 		//console.log(el);
@@ -342,23 +373,11 @@ const App = () => {
 				powerState={powerState}
 				setCurrentKeyId={setCurrentKeyId}
 				volumeValue={volumeValue}
-				keyPressedCount={keyPressedCount}
 				setKeyPressedCount={setKeyPressedCount}
-				key={el.id}
+				key={el.uniqueKey}
 			/>
 		);
 	});
-	//console.log(drumBoardRollout);
-	useEffect(() => {
-		//console.log('useEffect DumButton component executed')
-		if (currentSoundBank === 1) {
-			//console.log(currentSoundBank);
-			setDrumBoardProps(bankOne);
-		} else {
-			//console.log(currentSoundBank);
-			setDrumBoardProps(bankTwo);
-		}
-	}, [currentSoundBank]);
 	return (
 		<div>
 			<Container
@@ -367,7 +386,7 @@ const App = () => {
 				className="vh-100 d-flex align-items-center uniqueContainer"
 				style={{ backgroundColor: bgColor, minWidth: '250px' }}>
 				<div className="w-100 d-flex justify-content-center">
-					<Card style={cardStyle} className="inner-container">
+					<Card id="drum-machine" style={cardStyle} className="inner-container">
 						<Card.Title id="text" className="text-right mr-2 mb-0">
 							FCC
 							<i className="inner-logo fa fa-free-code-camp ml-1" />
